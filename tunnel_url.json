@@ -1,8 +1,8 @@
 {
-    "url": "https://dividend-cumulative-belongs-astronomy.trycloudflare.com",
-    "updated": "2026-05-16T09:12:03.755445Z",
-    "pages": {
-        "main": "/dashboard/index.html",
-        "fxrich": "/dashboard/fx_rich.html"
-    }
+  "url": "https://dividend-cumulative-belongs-astronomy.trycloudflare.com",
+  "updated": "2026-05-16T09:12:03.755445Z",
+  "pages": {
+    "main": "/index.html",
+    "fxrich": "/fx_rich.html"
+  }
 }
