@@ -514,13 +514,32 @@ a:hover{text-decoration:underline}
 <!-- SCRIPTS -->
 <script>
 async function resolveDataBaseUrl() {
-  try {
-    const r = await fetch("https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?_=" + Date.now());
-    if (r.ok) { const d = await r.json(); if (d.url) { DATA_BASE = d.url; return; } }
-  } catch(e) {}
+  // Try multiple CDN sources with health verification
+  const sources = [
+    'https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json',
+    'https://raw.githubusercontent.com/hermes18974-jpg/trade-fx/main/tunnel_url.json'
+  ];
+  for (const src of sources) {
+    try {
+      const r = await fetch(src + '?_=' + Date.now());
+      if (r.ok) {
+        const d = await r.json();
+        if (d.url) {
+          // HEALTH CHECK: verify tunnel is actually alive before trusting URL
+          try {
+            const probe = await fetch(d.url + '/dashboard/fx_rich_scan.json?_probe=' + Date.now(), { signal: AbortSignal.timeout(8000) });
+            if (probe.ok) { DATA_BASE = d.url; return; }
+          } catch(e) {
+            // Tunnel URL from CDN is stale/dead, try next source
+            continue;
+          }
+        }
+      }
+    } catch(e) { continue; }
+  }
   // Fallback: if serving directly from tunnel, use current origin
   if (location.hostname.includes("trycloudflare.com")) { DATA_BASE = location.origin; }
-  // Otherwise try local (development mode)
+  // Otherwise DATA_BASE stays empty → shows "reconnecting" message
 }
 // Dynamic data URL resolution — data loads from live tunnel, not relative paths
 let DATA_BASE = '';  // Set from tunnel_url.json at boot
