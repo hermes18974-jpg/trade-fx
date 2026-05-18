@@ -514,10 +514,11 @@ a:hover{text-decoration:underline}
 <!-- SCRIPTS -->
 <script>
 async function resolveDataBaseUrl() {
-  // Try multiple CDN sources with health verification
+  // PRIMARY: raw.githubusercontent.com (GitHub raw - NO CDN cache lag)
+  // FALLBACK: jsdelivr CDN (faster when fresh, cached ~2 min)
   const sources = [
-    'https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json',
-    'https://raw.githubusercontent.com/hermes18974-jpg/trade-fx/main/tunnel_url.json'
+    'https://raw.githubusercontent.com/hermes18974-jpg/trade-fx/main/tunnel_url.json?_=' + Date.now(),
+    'https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?_=' + Date.now()
   ];
   for (const src of sources) {
     try {
