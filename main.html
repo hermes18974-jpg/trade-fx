@@ -40,35 +40,41 @@ Reconnecting in <span id="cd">10</span>s...
 </div>
 </div>
 <script>
-const FALLBACK_URL = 'https://rip-pro-acid-aluminum.trycloudflare.com';
 (async function connect() {
 const st = document.getElementById('status');
 const go = document.getElementById('go');
+const MAIN_PATH = '/dashboard/index.html';
+const HEALTH_PATH = '/dashboard/completed_trades.json';
+
+// Step 1: Fetch dynamic tunnel URL from GitHub (jsdelivr CDN)
+let tunnelUrl = null;
 try {
-const r = await fetch(FALLBACK_URL + '/dashboard/completed_trades.json?t=' + Date.now(), {signal: AbortSignal.timeout(5000)});
+const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?t=' + Date.now());
 if (r.ok) {
-st.className = 'status online';
-st.innerHTML = 'Server online';
-go.href = FALLBACK_URL + '/dashboard/index.html';
-go.style.display = 'block';
-setTimeout(() => { window.location.href = go.href; }, 1500);
-return;
-}
-} catch(e) {}
-try {
-const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json');
 const d = await r.json();
-if (d.url) {
+if (d.url) tunnelUrl = d.url;
+}
+} catch(e) {}
+
+// Step 2: Verify tunnel is alive before redirecting
+if (tunnelUrl) {
+try {
+const healthUrl = tunnelUrl + HEALTH_PATH + '?t=' + Date.now();
+const h = await fetch(healthUrl, {signal: AbortSignal.timeout(6000)});
+if (h.ok) {
 st.className = 'status online';
-st.innerHTML = 'Server online (via CDN)';
-go.href = d.url + (d.pages ? d.pages.main : '/dashboard/index.html');
+st.innerHTML = '&#10003; Server online';
+go.href = tunnelUrl + MAIN_PATH;
 go.style.display = 'block';
-setTimeout(() => { window.location.href = go.href; }, 1500);
+setTimeout(() => { window.location.href = go.href; }, 1200);
 return;
 }
 } catch(e) {}
+}
+
+// Step 3: Tunnel is down - show retry
 st.className = 'status offline';
-document.getElementById('status-text') || st;
+document.getElementById('status-text').textContent = 'Server reconnecting...';
 let s = 10;
 document.getElementById('retry').style.display = 'block';
 const iv = setInterval(() => {

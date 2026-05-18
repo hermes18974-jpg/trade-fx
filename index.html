@@ -16,6 +16,8 @@ body { background: #0a0a14; color: #e0e0e0; font-family: 'JetBrains Mono', monos
 .status.offline { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.3); color: #ff3232; }
 .btn { display: block; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 700; margin: 0.5rem 0; }
 .btn-main { background: linear-gradient(135deg, #f0b90b, #d4a00a); color: #0a0a14; }
+.btn-fxrich { background: linear-gradient(135deg, #ff6b35, #ff4500); color: #fff; }
+.btn-fxrich:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255,107,53,0.4); }
 .btn-main:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(240,185,11,0.4); }
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(240,185,11,0.3); border-top-color: #f0b90b; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 6px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -31,44 +33,45 @@ body { background: #0a0a14; color: #e0e0e0; font-family: 'JetBrains Mono', monos
 <span class="spinner"></span>
 <span id="status-text">Connecting...</span>
 </div>
-<a id="go" class="btn btn-main" href="#" style="display:none">Open Dashboard</a>
+<a id="go-main" class="btn btn-main" href="#" style="display:none">Open Main Dashboard</a>
+<a id="go-fxrich" class="btn btn-fxrich" href="#" style="display:none">Open FX RICH Dashboard</a>
 <div id="retry" style="display:none; margin-top:1rem; color:#f0b90b; font-size:0.85rem;">
 Reconnecting in <span id="cd">10</span>s...
 </div>
 <div class="meta">
-<a href="/trade-fx/fxrich.html">FX RICH Dashboard</a> &middot; Permanent link
+Permanent link &middot; Auto-reconnects on tunnel restart
 </div>
 </div>
 <script>
-const FALLBACK_URL = 'https://rip-pro-acid-aluminum.trycloudflare.com';
 (async function connect() {
 const st = document.getElementById('status');
-const go = document.getElementById('go');
+const goMain = document.getElementById('go-main');
+const goFxrich = document.getElementById('go-fxrich');
+const HEALTH_PATH = '/dashboard/completed_trades.json';
+
+let tunnelUrl = null;
 try {
-const r = await fetch(FALLBACK_URL + '/dashboard/completed_trades.json?t=' + Date.now(), {signal: AbortSignal.timeout(5000)});
-if (r.ok) {
+const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?t=' + Date.now());
+if (r.ok) { const d = await r.json(); if (d.url) tunnelUrl = d.url; }
+} catch(e) {}
+
+if (tunnelUrl) {
+try {
+const h = await fetch(tunnelUrl + HEALTH_PATH + '?t=' + Date.now(), {signal: AbortSignal.timeout(6000)});
+if (h.ok) {
 st.className = 'status online';
-st.innerHTML = 'Server online';
-go.href = FALLBACK_URL + '/dashboard/index.html';
-go.style.display = 'block';
-setTimeout(() => { window.location.href = go.href; }, 1500);
+st.innerHTML = '&#10003; Server online';
+goMain.href = tunnelUrl + '/dashboard/index.html';
+goFxrich.href = tunnelUrl + '/dashboard/fx_rich.html';
+goMain.style.display = 'block';
+goFxrich.style.display = 'block';
 return;
 }
 } catch(e) {}
-try {
-const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json');
-const d = await r.json();
-if (d.url) {
-st.className = 'status online';
-st.innerHTML = 'Server online (via CDN)';
-go.href = d.url + (d.pages ? d.pages.main : '/dashboard/index.html');
-go.style.display = 'block';
-setTimeout(() => { window.location.href = go.href; }, 1500);
-return;
 }
-} catch(e) {}
+
 st.className = 'status offline';
-document.getElementById('status-text') || st;
+document.getElementById('status-text').textContent = 'Server reconnecting...';
 let s = 10;
 document.getElementById('retry').style.display = 'block';
 const iv = setInterval(() => {
