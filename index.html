@@ -39,7 +39,7 @@ body { background: #0a0a14; color: #e0e0e0; font-family: 'JetBrains Mono', monos
 Reconnecting in <span id="cd">10</span>s...
 </div>
 <div class="meta">
-Permanent link &middot; Auto-reconnects on tunnel restart
+Permanent link &middot; Auto-redirects on load
 </div>
 </div>
 <script>
@@ -47,7 +47,6 @@ Permanent link &middot; Auto-reconnects on tunnel restart
 const st = document.getElementById('status');
 const goMain = document.getElementById('go-main');
 const goFxrich = document.getElementById('go-fxrich');
-const HEALTH_PATH = '/dashboard/completed_trades.json';
 
 let tunnelUrl = null;
 try {
@@ -55,23 +54,9 @@ const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main
 if (r.ok) { const d = await r.json(); if (d.url) tunnelUrl = d.url; }
 } catch(e) {}
 
-if (tunnelUrl) {
-try {
-const h = await fetch(tunnelUrl + HEALTH_PATH + '?t=' + Date.now(), {signal: AbortSignal.timeout(6000)});
-if (h.ok) {
-st.className = 'status online';
-st.innerHTML = '&#10003; Server online';
-goMain.href = tunnelUrl + '/dashboard/index.html';
-goFxrich.href = tunnelUrl + '/dashboard/fx_rich.html';
-goMain.style.display = 'block';
-goFxrich.style.display = 'block';
-return;
-}
-} catch(e) {}
-}
-
+if (!tunnelUrl) {
 st.className = 'status offline';
-document.getElementById('status-text').textContent = 'Server reconnecting...';
+document.getElementById('status-text').textContent = 'Cannot reach config server. Retrying...';
 let s = 10;
 document.getElementById('retry').style.display = 'block';
 const iv = setInterval(() => {
@@ -79,6 +64,18 @@ s--;
 document.getElementById('cd').textContent = s;
 if (s <= 0) { clearInterval(iv); location.reload(); }
 }, 1000);
+return;
+}
+
+st.className = 'status online';
+st.innerHTML = '&#10003; Redirecting...';
+goMain.href = tunnelUrl + '/dashboard/index.html';
+goFxrich.href = tunnelUrl + '/dashboard/fx_rich.html';
+goMain.style.display = 'block';
+goFxrich.style.display = 'block';
+
+// Direct navigation - works without CORS
+setTimeout(() => { window.location.href = tunnelUrl + '/dashboard/index.html'; }, 800);
 })();
 </script>
 </body>

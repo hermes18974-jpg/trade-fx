@@ -35,58 +35,44 @@ body { background: #0a0a14; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira
 <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
 <a href="/trade-fx/main.html" style="color:#666; font-size:0.75rem;">Main Dashboard</a>
 </div>
-<div id="retry" style="display:none; margin-top:1rem; color:#ffaa00; font-size:0.85rem;">
-Reconnecting in <span id="cd">10</span>s...
-</div>
 <div class="meta">
-Permanent link &middot; Auto-reconnects on tunnel restart<br>
+Permanent link &middot; Auto-redirects on load<br>
 Powered by <a href="https://github.com/hermes18974-jpg/trade-fx">Pablo's Trade Hub</a>
 </div>
 </div>
 <script>
+// Two-phase redirect: navigation first (no CORS needed), fetch as enhancement
 (async function connect() {
 const st = document.getElementById('status');
 const txt = document.getElementById('status-text');
 const go = document.getElementById('go');
 const FXRICH_PATH = '/dashboard/fx_rich.html';
 const HEALTH_PATH = '/dashboard/completed_trades.json';
-
-// Step 1: Fetch dynamic tunnel URL from GitHub (jsdelivr CDN, no cache delay)
 let tunnelUrl = null;
+
+// Step 1: Get current tunnel URL from GitHub CDN
 try {
 const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?t=' + Date.now());
-if (r.ok) {
-const d = await r.json();
-if (d.url) tunnelUrl = d.url;
-}
+if (r.ok) { const d = await r.json(); if (d.url) tunnelUrl = d.url; }
 } catch(e) {}
 
-// Step 2: If we got a URL, verify it's actually alive before redirecting
-if (tunnelUrl) {
-try {
-const healthUrl = tunnelUrl + HEALTH_PATH + '?t=' + Date.now();
-const h = await fetch(healthUrl, {signal: AbortSignal.timeout(6000)});
-if (h.ok) {
-st.className = 'status online';
-st.innerHTML = '&#10003; Server online';
-go.href = tunnelUrl + FXRICH_PATH;
-go.style.display = 'block';
-setTimeout(() => { window.location.href = go.href; }, 1200);
+if (!tunnelUrl) {
+st.className = 'status offline';
+txt.textContent = 'Cannot reach config server. Retrying...';
+setTimeout(() => location.reload(), 10000);
 return;
 }
-} catch(e) {}
-}
 
-// Step 3: Tunnel is down - show retry
-st.className = 'status offline';
-txt.textContent = 'Server reconnecting...';
-let s = 10;
-document.getElementById('retry').style.display = 'block';
-const iv = setInterval(() => {
-s--;
-document.getElementById('cd').textContent = s;
-if (s <= 0) { clearInterval(iv); location.reload(); }
-}, 1000);
+// Step 2: Redirect immediately via window.location (CORS-safe navigation)
+// This works even if fetch() is blocked by CORS, because top-level nav
+// doesn't need CORS headers.
+st.className = 'status online';
+st.innerHTML = '&#10003; Redirecting...';
+go.href = tunnelUrl + FXRICH_PATH;
+go.style.display = 'block';
+
+// Direct navigation - works without CORS
+setTimeout(() => { window.location.href = tunnelUrl + FXRICH_PATH; }, 800);
 })();
 </script>
 </body>
