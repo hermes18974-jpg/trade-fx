@@ -50,7 +50,7 @@ const goFxrich = document.getElementById('go-fxrich');
 
 let tunnelUrl = null;
 try {
-const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?t=' + Date.now());
+const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?_=' + Date.now());
 if (r.ok) { const d = await r.json(); if (d.url) tunnelUrl = d.url; }
 } catch(e) {}
 
@@ -74,8 +74,8 @@ goFxrich.href = tunnelUrl + '/dashboard/fx_rich.html';
 goMain.style.display = 'block';
 goFxrich.style.display = 'block';
 
-// Direct navigation - works without CORS
-setTimeout(() => { window.location.href = tunnelUrl + '/dashboard/index.html'; }, 800);
+// Use replace() so Back button returns here, not to a dead tunnel page
+setTimeout(() => { window.location.replace(tunnelUrl + '/dashboard/index.html'); }, 1000);
 })();
 </script>
 </body>

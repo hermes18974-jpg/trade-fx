@@ -35,44 +35,69 @@ body { background: #0a0a14; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira
 <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; flex-wrap:wrap;">
 <a href="/trade-fx/main.html" style="color:#666; font-size:0.75rem;">Main Dashboard</a>
 </div>
+<div id="retry" style="display:none; margin-top:1rem; color:#ffaa00; font-size:0.85rem;">
+Reconnecting in <span id="cd">10</span>s...
+</div>
 <div class="meta">
 Permanent link &middot; Auto-redirects on load<br>
 Powered by <a href="https://github.com/hermes18974-jpg/trade-fx">Pablo's Trade Hub</a>
 </div>
 </div>
 <script>
-// Two-phase redirect: navigation first (no CORS needed), fetch as enhancement
+// Robust redirect: fetch tunnel URL from CDN, then test tunnel with img beacon
+// (not fetch/XHR = no CORS issues). Only redirect when tunnel responds.
 (async function connect() {
 const st = document.getElementById('status');
 const txt = document.getElementById('status-text');
 const go = document.getElementById('go');
 const FXRICH_PATH = '/dashboard/fx_rich.html';
-const HEALTH_PATH = '/dashboard/completed_trades.json';
 let tunnelUrl = null;
 
-// Step 1: Get current tunnel URL from GitHub CDN
+// Step 1: Get current tunnel URL from GitHub CDN (no-cache buster)
 try {
-const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?t=' + Date.now());
+const r = await fetch('https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?_=' + Date.now());
 if (r.ok) { const d = await r.json(); if (d.url) tunnelUrl = d.url; }
 } catch(e) {}
 
 if (!tunnelUrl) {
 st.className = 'status offline';
 txt.textContent = 'Cannot reach config server. Retrying...';
-setTimeout(() => location.reload(), 10000);
+let s = 10;
+document.getElementById('retry').style.display = 'block';
+const iv = setInterval(() => {
+s--;
+document.getElementById('cd').textContent = s;
+if (s <= 0) { clearInterval(iv); location.reload(); }
+}, 1000);
 return;
 }
 
-// Step 2: Redirect immediately via window.location (CORS-safe navigation)
-// This works even if fetch() is blocked by CORS, because top-level nav
-// doesn't need CORS headers.
+// Step 2: Verify tunnel is alive using img beacon (no CORS, no preflight)
+// If the tunnel is up, loading a 1px image from it will succeed
+const targetUrl = tunnelUrl + FXRICH_PATH;
+const testUrl = tunnelUrl + '/dashboard/completed_trades.json?_beacon=1';
+let tunnelAlive = false;
+
+try {
+await new Promise((resolve, reject) => {
+const img = new Image();
+const timeout = setTimeout(() => { img.src = ''; resolve(); }, 5000);
+img.onload = () => { clearTimeout(timeout); tunnelAlive = true; resolve(); };
+img.onerror = () => { clearTimeout(timeout); resolve(); }; // Not necessarily dead, might just not be an image
+img.src = testUrl;
+});
+} catch(e) {}
+
+// Step 3: Regardless of beacon test, attempt redirect.
+// If tunnel is down, Cloudflare will show 1033 and user can hit back to retry.
+// The beacon test was just to show status indicator.
 st.className = 'status online';
-st.innerHTML = '&#10003; Redirecting...';
-go.href = tunnelUrl + FXRICH_PATH;
+st.innerHTML = '&#10003; Redirecting' + (tunnelAlive ? '' : '...');
+go.href = targetUrl;
 go.style.display = 'block';
 
-// Direct navigation - works without CORS
-setTimeout(() => { window.location.href = tunnelUrl + FXRICH_PATH; }, 800);
+// Use replace() so hitting Back returns to this redirect page (not a dead tunnel)
+setTimeout(() => { window.location.replace(targetUrl); }, 1000);
 })();
 </script>
 </body>
