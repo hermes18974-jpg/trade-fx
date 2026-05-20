@@ -1,1457 +1,456 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PABLO TRADE HUB">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0a0a14">
-<meta name="color-scheme" content="dark">
-<meta name="format-detection" content="telephone=no">
-<title>PABLO'S TRADE HUB — Live Trading Dashboard</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⊘</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⊘</text></svg>">
-<meta http-equiv="refresh" content="60">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0a14;--bg2:#0d0d1a;--card:#111125;--card2:#161636;
-  --gold:#f0b90b;--gold-dim:#b08a08;--green:#00e676;--green-dim:#0a3d28;
-  --red:#ff1744;--red-dim:#3d0a14;--blue:#448aff;--purple:#e040fb;
-  --orange:#ff9100;--white:#e0e0e0;--dim:#555568;--border:#222238;
-  --text:#c0c0d0;--text-dim:#777790;--accent:#6c5ce7;
-  --safe:4px;--radius:16px;
-  --safe-top:env(safe-area-inset-top,0px);
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-  --safe-left:env(safe-area-inset-left,0px);
-  --safe-right:env(safe-area-inset-right,0px);
-  --min-tap:44px;
-  --font-body:12px;--font-sm:11px;--font-xs:10px;--font-label:9px;
-}
-html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;font-size:var(--font-body);padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right)}
-::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:3px}
-
-/* ═══ NAV ═══ */
-.nav{position:sticky;top:0;z-index:100;background:rgba(10,10,20,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.nav-left{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow:hidden;flex:1;min-width:0}
-.nav-logo{font-size:15px;font-weight:800;color:var(--gold);letter-spacing:-0.5px;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.nav-logo span{color:var(--text-dim);font-weight:400;font-size:12px}
-.nav-badge{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0}
-.badge-live{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.3)}
-.badge-testnet{background:rgba(240,185,11,0.12);color:var(--gold);border:1px solid rgba(240,185,11,0.3)}
-.nav-right{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;flex-shrink:0}
-.nav-info{display:none}
-
-/* Hamburger button - hidden on desktop */
-.hamburger{display:none;width:var(--min-tap);height:var(--min-tap);background:none;border:1px solid var(--border);border-radius:10px;cursor:pointer;flex-shrink:0;align-items:center;justify-content:center;color:var(--text);font-size:20px;-webkit-appearance:none;appearance:none}
-.hamburger:active{background:var(--card2)}
-
-/* Mobile slide-out panel */
-.nav-mobile-panel{display:none;position:fixed;top:0;right:-280px;width:280px;height:100vh;height:100dvh;background:var(--card);border-left:1px solid var(--border);z-index:300;padding:20px 16px;padding-top:calc(20px + var(--safe-top));transition:right 0.3s ease;overflow-y:auto}
-.nav-mobile-panel.open{right:0}
-.nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:250;opacity:0;transition:opacity 0.3s}
-.nav-overlay.open{opacity:1}
-.nav-mobile-panel .mobile-badge{display:block;padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:11px;font-family:'JetBrains Mono',monospace;text-align:center;border:1px solid var(--border)}
-.nav-mobile-panel .mobile-close{position:absolute;top:12px;right:12px;width:var(--min-tap);height:var(--min-tap);display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:18px;cursor:pointer}
-
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.refresh-bar{position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:200;animation:refreshCount 60s linear}
-@keyframes refreshCount{from{width:0}to{width:100%}}
-
-/* ═══ MAIN LAYOUT ═══ */
-.main{padding:10px;max-width:1440px;margin:0 auto}
-.grid{display:grid;gap:10px}
-.g-stats{grid-template-columns:repeat(2,1fr)}
-.g-main{grid-template-columns:1fr}
-.g-positions{grid-column:1/-1;grid-row:auto}
-.g-strategies{grid-column:1/-1;grid-row:auto}
-.g-signals{grid-column:1/-1;grid-row:auto}
-.g-charts{grid-template-columns:1fr}
-.g-bottom{grid-template-columns:1fr}
-.g-risk{grid-template-columns:repeat(2,1fr)}
-.g-alloc{grid-template-columns:1fr !important}
-
-/* ═══ CARD ═══ */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;transition:border-color 0.2s;overflow:hidden}
-.card:active{border-color:rgba(240,185,11,0.15)}
-.card-title{font-size:var(--font-label);font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.card-title .icon{font-size:14px}
-
-/* ═══ STAT CARDS ═══ */
-.stat{text-align:center;padding:12px 6px}
-.stat-value{font-size:20px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-bottom:2px;letter-spacing:-0.5px;word-break:break-all}
-.stat-label{font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;font-weight:500}
-.stat-sub{font-size:8px;color:var(--dim);margin-top:3px;font-family:'JetBrains Mono',monospace;word-break:break-word}
-
-/* ═══ POSITION TABLE -> CARDS ON MOBILE ═══ */
-.pos-table{width:100%;border-collapse:collapse;font-size:var(--font-sm)}
-.pos-table th{text-align:left;padding:8px 6px;color:var(--text-dim);font-size:var(--font-label);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-weight:600}
-.pos-table td{padding:8px 6px;border-bottom:1px solid rgba(34,34,56,0.5);vertical-align:middle}
-.pos-table tr:active{background:var(--card2)}
-.pos-side{padding:2px 6px;border-radius:4px;font-size:var(--font-xs);font-weight:700;letter-spacing:0.5px}
-.pos-long{background:rgba(0,230,118,0.12);color:var(--green)}
-.pos-short{background:rgba(255,23,68,0.12);color:var(--red)}
-.strat-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:var(--font-xs);font-weight:600}
-.pnl-pos{color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:600}
-.pnl-neg{color:var(--red);font-family:'JetBrains Mono',monospace;font-weight:600}
-.progress-bar{width:100%;height:4px;background:var(--bg2);border-radius:2px;margin-top:4px;overflow:hidden}
-.progress-fill{height:100%;border-radius:2px;transition:width 0.6s ease}
-.no-data{text-align:center;padding:30px 12px;color:var(--dim);font-size:12px}
-
-/* ═══ STRATEGY GRID ═══ */
-.strat-grid{display:grid;grid-template-columns:1fr;gap:8px}
-.strat-card{padding:10px;border-radius:10px;background:var(--bg2);border:1px solid var(--border)}
-.strat-card:active{border-color:rgba(240,185,11,0.3)}
-.strat-card.flagged{border-color:rgba(255,23,68,0.4);background:rgba(61,10,20,0.3)}
-.strat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.strat-name{font-size:var(--font-sm);font-weight:700;display:flex;align-items:center;gap:4px}
-.strat-icon{font-size:12px}
-.strat-wr{font-size:var(--font-sm);font-family:'JetBrains Mono',monospace;font-weight:700}
-.strat-stats{display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:var(--font-xs);color:var(--text-dim)}
-.strat-stats span{font-family:'JetBrains Mono',monospace}
-.strat-flag{font-size:8px;color:var(--red);font-weight:600;text-transform:uppercase;margin-top:4px}
-
-/* ═══ SIGNALS ═══ */
-.signal-list{display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.signal-item{padding:10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;gap:10px;min-height:var(--min-tap)}
-.signal-item:active{border-color:rgba(240,185,11,0.3)}
-.signal-exec{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.sig-exec-yes{background:var(--green)}
-.sig-exec-no{background:var(--dim)}
-.signal-sym{font-size:var(--font-sm);font-weight:700}
-.signal-meta{font-size:9px;color:var(--text-dim);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* ═══ CHARTS ═══ */
-.chart-img{width:100%;border-radius:8px;border:1px solid var(--border);margin-bottom:8px}
-.chart-label{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;font-weight:600}
-
-/* ═══ RISK CARD ═══ */
-.risk-card{text-align:center;padding:10px}
-.risk-value{font-size:16px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-bottom:2px}
-.risk-label{font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
-
-/* ═══ ALLOCATION ═══ */
-.alloc-card{padding:12px}
-.alloc-row{display:flex;align-items:center;gap:4px;padding:4px 0;font-size:var(--font-sm)}
-.alloc-strat{width:60px;color:var(--text-dim);font-size:var(--font-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.alloc-bar-wrap{flex:1;height:6px;border-radius:3px;overflow:hidden;background:#1a1a2e;min-width:40px}
-.alloc-bar{height:100%;border-radius:3px;min-width:2px;transition:width 0.3s}
-.alloc-val{width:auto;color:var(--text);font-weight:600;font-size:var(--font-xs);font-family:'JetBrains Mono',monospace}
-.alloc-pnl{width:auto;font-weight:600;font-size:var(--font-xs);font-family:'JetBrains Mono',monospace;flex-shrink:0}
-.alloc-wr{width:auto;color:var(--text-dim);font-size:9px;flex-shrink:0}
-
-.risk-row{display:flex;align-items:center;gap:4px;padding:4px 0;font-size:var(--font-xs);min-height:var(--min-tap);flex-wrap:wrap}
-.risk-badge{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;color:#111;min-width:28px;text-align:center}
-.risk-sym{width:auto;color:var(--text);font-weight:600;font-size:var(--font-xs)}
-.risk-side{width:auto;color:var(--text-dim);font-size:9px}
-.risk-val{width:auto;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:var(--font-xs)}
-.risk-pct{width:auto;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:var(--font-xs)}
-
-.signal-row{display:flex;align-items:center;gap:4px;padding:4px 0;font-size:var(--font-xs);min-height:36px;flex-wrap:wrap}
-.signal-sym{width:auto;color:var(--text);font-weight:600;font-size:var(--font-xs)}
-.signal-side{width:auto;color:var(--text-dim);font-size:9px}
-.signal-strat{width:auto;color:var(--text-dim);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px}
-.signal-conf{width:auto;font-weight:700;font-size:9px}
-.signal-rr{width:auto;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:9px}
-
-/* ═══ IMPROVEMENTS ═══ */
-.imp-card{padding:10px;border-left:3px solid var(--border);margin-bottom:6px;background:var(--bg2);border-radius:0 6px 6px 0;font-size:var(--font-sm)}
-.imp-card.open{border-left-color:var(--orange)}
-.imp-card.resolved{border-left-color:var(--green);opacity:0.6}
-.imp-type{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
-.imp-desc{color:var(--text);line-height:1.4}
-.imp-date{color:var(--dim);font-size:9px;margin-top:3px;font-family:'JetBrains Mono',monospace}
-
-.balance-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(34,34,56,0.3);font-size:var(--font-sm);min-height:var(--min-tap);align-items:center}
-.balance-asset{font-weight:700;font-family:'JetBrains Mono',monospace}
-.balance-val{font-family:'JetBrains Mono',monospace;color:var(--gold)}
-
-/* ═══ TAB BAR ═══ */
-.tab-bar{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none}
-.tab-bar::-webkit-scrollbar{display:none}
-.tab{padding:10px 16px;border-radius:8px;font-size:var(--font-sm);font-weight:600;cursor:pointer;background:var(--bg2);color:var(--text-dim);border:1px solid var(--border);white-space:nowrap;scroll-snap-align:start;transition:all 0.2s;min-height:var(--min-tap);display:flex;align-items:center}
-.tab.active{background:var(--card);color:var(--gold);border-color:rgba(240,185,11,0.3)}
-.tab:active{border-color:rgba(240,185,11,0.2);transform:scale(0.97)}
-.tab-content{display:none}
-.tab-content.active{display:block}
-
-/* ═══ CLOSED TRADES ═══ */
-.closed-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(34,34,56,0.3);font-size:var(--font-sm);min-height:var(--min-tap);flex-wrap:wrap}
-.closed-sym{font-weight:700;min-width:auto}
-.closed-result{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700}
-.result-tp{background:rgba(0,230,118,0.12);color:var(--green)}
-.result-sl{background:rgba(255,23,68,0.12);color:var(--red)}
-
-/* ═══ FOOTER ═══ */
-.footer{text-align:center;padding:20px 12px;font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);margin-top:20px;padding-bottom:calc(20px + var(--safe-bottom))}
-
-.trend-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.trend-improving{background:rgba(0,230,118,0.12);color:var(--green)}
-.trend-stable{background:rgba(240,185,11,0.12);color:var(--gold)}
-.trend-declining{background:rgba(255,23,68,0.12);color:var(--red)}
-
-.suggestion{padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:var(--font-sm);color:var(--text)}
-.suggestion-strat{font-weight:700;color:var(--orange);font-family:'JetBrains Mono',monospace}
-
-/* ═══ FX RICH ═══ */
-.fx-header{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:10px;flex-wrap:wrap}
-.fx-header-icon{font-size:20px;color:var(--gold)}
-.fx-header-title{font-weight:700;color:var(--text);font-size:var(--font-md)}
-.fx-header-badge{font-size:9px;color:var(--dim);background:var(--bg2);padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace}
-.fx-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-.fx-stat{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center}
-.fx-stat-label{display:block;font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace}
-.fx-stat-val{display:block;font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.fx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
-.fx-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:0}
-.fx-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.fx-pair{font-weight:700;font-size:14px;font-family:'JetBrains Mono',monospace}
-.fx-pair-quote{font-size:10px;color:var(--dim);margin-left:2px}
-.fx-signal{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace}
-.fx-bias-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:11px}
-.fx-bias-label{font-weight:700;font-family:'JetBrains Mono',monospace}
-.fx-bias-score{color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:10px}
-.fx-conf-bar-wrap{position:relative;height:18px;background:var(--bg2);border-radius:4px;overflow:hidden;margin-bottom:6px;border:1px solid var(--border)}
-.fx-conf-bar{height:100%;border-radius:4px;transition:width 0.3s}
-.fx-conf-text{position:absolute;top:0;left:0;right:0;text-align:center;font-size:9px;font-weight:700;line-height:18px;color:var(--text);font-family:'JetBrains Mono',monospace}
-.fx-details{margin-bottom:6px;font-size:10px;line-height:1.4}
-.fx-level{display:flex;justify-content:space-between;padding:2px 0;font-size:10px;font-family:'JetBrains Mono',monospace}
-.fx-level-label{color:var(--dim)}
-.fx-level-val{color:var(--text)}
-.fx-sweep{font-size:10px;padding:2px 0;color:var(--orange)}
-.fx-entry-box{border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-top:6px;background:var(--bg)}
-.fx-entry-row{display:flex;justify-content:space-between;font-size:11px;padding:1px 0;font-family:'JetBrains Mono',monospace}
-.fx-reason{font-size:9px;color:var(--dim);margin-top:6px;font-style:italic;border-top:1px solid var(--border);padding-top:4px}
-
-@media(max-width:600px){.fx-summary{grid-template-columns:repeat(2,1fr)}.fx-grid{grid-template-columns:1fr}}
-
-/* ═══ TV CHART WIDGETS ═══ */
-.chart-card-interactive{overflow:hidden;padding:0}
-.chart-info-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
-.badge-lv{display:inline-block;padding:4px 10px;border-radius:4px;font-size:var(--font-sm);font-weight:800;letter-spacing:0.5px;text-transform:uppercase}
-.badge-lv.side-long{background:rgba(38,166,154,0.25);color:#26a69a;border:1px solid rgba(38,166,154,0.5)}
-.badge-lv.side-short{background:rgba(239,83,80,0.25);color:#ef5350;border:1px solid rgba(239,83,80,0.5)}
-.badge-lv.strat{background:rgba(255,171,0,0.15);color:#FFab00;border:1px solid rgba(255,171,0,0.4)}
-.badge-lv.pair{background:rgba(255,255,255,0.06);color:#b2b5be;border:1px solid rgba(255,255,255,0.12)}
-.level-tag{font-size:var(--font-xs);font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px}
-.tv-widget-container{width:100%;height:300px}
-
-/* ═══ LIVE PRICE TABLE - MOBILE CARD VIEW ═══ */
-.live-price-table{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.live-price-table thead{display:none}
-.live-price-table tbody{display:contents}
-.live-price-table tr{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;min-height:var(--min-tap)}
-.live-price-table td{padding:0;border:none;font-size:var(--font-sm)}
-
-/* ═══ POSITION TABLE -> MOBILE STACKED CARD ═══ */
-@media(max-width:768px){
-  .pos-table thead{display:none}
-  .pos-table tbody tr{display:block;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
-  .pos-table tbody td{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(34,34,56,0.3);font-size:var(--font-sm)}
-  .pos-table tbody td:last-child{border-bottom:none}
-  .pos-table tbody td::before{content:attr(data-label);color:var(--text-dim);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;margin-right:8px}
-  .pos-table tbody td>span,.pos-table tbody td>strong,.pos-table tbody td>div{text-align:right}
-  .signal-sym,.signal-side,.signal-strat,.signal-conf,.signal-rr{width:auto}
-  .risk-sym,.risk-side,.risk-val,.risk-pct{width:auto}
-  .alloc-strat{width:50px;font-size:9px}
-}
-
-/* ═══ TABLET BREAKPOINT 768px ═══ */
-@media(min-width:768px){
-  .g-stats{grid-template-columns:repeat(3,1fr)}
-  .g-risk{grid-template-columns:repeat(4,1fr)}
-  .g-main{grid-template-columns:1.4fr 1fr;grid-template-rows:auto auto}
-  .g-positions{grid-column:1/2;grid-row:1/3}
-  .g-strategies{grid-column:2/3;grid-row:1/2}
-  .g-signals{grid-column:2/3;grid-row:2/3}
-  .g-charts{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
-  .g-bottom{grid-template-columns:1fr 1fr}
-  .g-alloc{grid-template-columns:1fr 1fr !important}
-  .strat-grid{grid-template-columns:repeat(2,1fr)}
-  .main{padding:12px 16px}
-  .stat-value{font-size:22px}
-  .nav{padding:10px 16px}
-  .nav-logo{font-size:17px}
-  .tv-widget-container{height:340px}
-  .live-price-table{grid-template-columns:1fr 1fr}
-  .signal-list{max-height:340px}
-  .hamburger{display:none!important}
-  .nav-mobile-panel,.nav-overlay{display:none!important}
-}
-
-/* ═══ DESKTOP 1024px ═══ */
-@media(min-width:1024px){
-  .g-stats{grid-template-columns:repeat(5,1fr)}
-  .g-bottom{grid-template-columns:1fr 1fr 1fr}
-  .g-alloc{grid-template-columns:1fr 1fr 1fr !important}
-  .stat-value{font-size:24px;letter-spacing:-1px}
-  .stat-label{font-size:9px}
-  .stat-sub{font-size:9px}
-  .card:hover{border-color:rgba(240,185,11,0.15)}
-  .strat-card:hover{border-color:rgba(240,185,11,0.3);transform:translateY(-1px)}
-  .signal-item:hover{border-color:rgba(240,185,11,0.3)}
-  .tab:hover{border-color:rgba(240,185,11,0.2)}
-  .pos-table tr:hover{background:var(--card2)}
-  .tv-widget-container{height:380px}
-  .live-price-table{grid-template-columns:1fr 1fr}
-  .signal-list{max-height:400px}
-  .nav-info{display:flex}
-  .hamburger{display:none!important}
-  .nav-mobile-panel,.nav-overlay{display:none!important}
-}
-
-/* ═══ LARGE DESKTOP 1440px ═══ */
-@media(min-width:1440px){
-  .main{padding:16px 24px}
-}
-
-/* ═══ SMALL PHONES 320px-374px ═══ */
-@media(max-width:374px){
-  .g-stats{grid-template-columns:repeat(2,1fr);gap:6px}
-  .g-risk{grid-template-columns:repeat(2,1fr);gap:6px}
-  .stat-value{font-size:17px}
-  .stat-label{font-size:7px}
-  .stat-sub{font-size:7px}
-  .nav-logo{font-size:13px}
-  .nav-logo span{font-size:10px}
-  .main{padding:8px}
-  .card{padding:10px 8px;border-radius:12px}
-  .tab{padding:8px 12px;font-size:10px}
-  .badge-lv{font-size:10px;padding:3px 8px}
-  .level-tag{font-size:10px}
-  .alloc-strat{width:45px;font-size:9px}
-  .alloc-val,.alloc-pnl{font-size:9px}
-  .live-price-table{grid-template-columns:1fr 1fr}
-  .hamburger{display:flex}
-  .nav-info{display:none}
-  .nav-right .nav-info{display:none}
-}
-
-/* ═══ MEDIUM PHONES 375px-413px ═══ */
-@media(min-width:375px) and (max-width:413px){
-  .stat-value{font-size:19px}
-  .hamburger{display:flex}
-  .nav-info{display:none}
-}
-
-/* ═══ LARGE PHONES 414px-767px ═══ */
-@media(min-width:414px) and (max-width:767px){
-  .stat-value{font-size:20px}
-  .strat-grid{grid-template-columns:1fr 1fr}
-  .hamburger{display:flex}
-  .nav-info{display:none}
-}
-
-/* ═══ MOBILE NAV OVERRIDES ═══ */
-@media(max-width:767px){
-  .hamburger{display:flex}
-  .nav-mobile-panel{display:block}
-  .nav-overlay{display:block;pointer-events:none}
-  .nav-overlay.open{pointer-events:auto}
-  .nav-info{display:none}
-  .nav-right{gap:4px}
-}
-</style>
-// Fetch and display current tunnel URL in footer
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js" async></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FX RICH — Trading Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1a1e;
+            --bg-elevated: #1b2429;
+            --border: #1a2a30;
+            --border-light: #2a3a40;
+            --text: #f6fefd;
+            --text-muted: #878c8f;
+            --accent: #50d2c1;
+            --accent-dim: rgba(80,210,193,0.15);
+            --profit: #0ecb81;
+            --loss: #f6465d;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+        .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.05rem; letter-spacing: -0.3px; }
+        .logo-icon { color: var(--accent); font-size: 1.2rem; }
+        .mode-badge { background: var(--accent-dim); color: var(--accent); padding: 3px 10px; border-radius: 20px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .conn { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--text-muted); }
+        .conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--loss); transition: background 0.3s; }
+        .conn-dot.online { background: var(--profit); box-shadow: 0 0 6px var(--profit); }
+        
+        .portfolio { padding: 16px; border-bottom: 1px solid var(--border); }
+        .port-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .port-title { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+        .port-time { font-size: 0.68rem; color: var(--text-muted); }
+        .port-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }
+        .metric { display: flex; flex-direction: column; gap: 4px; }
+        .metric-label { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.2px; }
+        .metric-value { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; }
+        .positive { color: var(--profit); }
+        .negative { color: var(--loss); }
+        
+        .risk-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .risk-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.6s ease; }
+        .risk-label { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.62rem; color: var(--text-muted); }
+        
+        .tabs { display: flex; padding: 0 16px; border-bottom: 1px solid var(--border); gap: 22px; overflow-x: auto; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { padding: 12px 2px; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        
+        .tab-content { display: none; padding: 14px 16px; min-height: 60vh; }
+        .tab-content.active { display: block; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .section-title { font-size: 0.82rem; font-weight: 600; }
+        .badge { background: var(--bg-elevated); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 500; }
+        
+        .card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 13px; margin-bottom: 10px; transition: transform 0.15s, border-color 0.2s; }
+        .card:active { transform: scale(0.98); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .symbol { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 0.88rem; }
+        .symbol-emoji { font-size: 1.05rem; }
+        .side-badge { padding: 3px 9px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; }
+        .side-long { background: rgba(14,203,129,0.12); color: var(--profit); }
+        .side-short { background: rgba(246,70,93,0.12); color: var(--loss); }
+        
+        .card-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+        .detail { display: flex; flex-direction: column; gap: 3px; }
+        .detail-label { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+        .detail-value { font-size: 0.8rem; font-weight: 500; }
+        
+        .progress { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+        .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+        .progress-green { background: var(--profit); }
+        .progress-red { background: var(--loss); }
+        .progress-accent { background: var(--accent); }
+        
+        .card-footer { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--text-muted); margin-top: 4px; }
+        
+        .empty { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 2.8rem; margin-bottom: 14px; opacity: 0.4; }
+        .empty-text { font-size: 0.92rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        .empty-sub { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .tv-container { width: 100%; height: 400px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: var(--bg-elevated); }
+        .tv-container iframe { width: 100%; height: 100%; border: none; }
+        
+        .footer { padding: 14px 16px; border-top: 1px solid var(--border); margin-top: 10px; }
+        .footer-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--loss); display: inline-block; margin-right: 6px; transition: background 0.3s; }
+        .pulse.active { background: var(--profit); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .footer-text { font-size: 0.68rem; color: var(--text-muted); }
+        
+        .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: var(--bg); padding: 10px 20px; border-radius: 8px; font-weight: 700; z-index: 500; font-size: 0.82rem; opacity: 0; transition: all 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { background: var(--loss); color: white; }
+        
+        .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
+        .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .kill-banner { display: none; background: rgba(246,70,93,0.12); border: 1px solid rgba(246,70,93,0.25); border-radius: 8px; padding: 10px 14px; margin: 12px 16px; align-items: center; gap: 10px; }
+        .kill-banner.active { display: flex; }
+        .kill-text { color: var(--loss); font-weight: 700; font-size: 0.8rem; }
+        
+        .pair-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+        .pair-chip { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); text-align: center; cursor: pointer; transition: all 0.15s; }
+        .pair-chip:hover { border-color: var(--border-light); color: var(--text); }
+        .pair-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        
+        .refresh-btn { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 0.72rem; font-weight: 500; cursor: pointer; }
+        .refresh-btn:active { background: var(--border-light); color: var(--text); }
+    </style>
 </head>
 <body>
-
-<div class="refresh-bar"></div>
-
-<nav class="nav">
-  <div class="nav-left">
-    <div class="nav-logo">PABLO'S <span>TRADE HUB</span></div>
-    <a href="fx_rich.html" style="text-decoration:none"><span class="nav-badge" style="background:rgba(68,138,255,0.15);color:#448aff;border:1px solid rgba(68,138,255,0.3);cursor:pointer">◆ FX RICH</span></a>
-    <span class="nav-badge badge-live"><span class="pulse"></span>LIVE</span>
-    <span class="nav-badge badge-testnet">TESTNET</span>
-  </div>
-  <div class="nav-right">
-    <span class="nav-info nav-badge" style="background:#00e67622;color:#00e676;border:1px solid #00e67644">Unreal: +$15.0034</span>
-    <span id="clock" class="nav-info">2026-05-16 10:34:25 IST</span>
-    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">☰</button>
-  </div>
-</nav>
-
-<div class="nav-overlay" id="navOverlay" onclick="toggleMobileNav()"></div>
-<div class="nav-mobile-panel" id="navPanel">
-  <button class="mobile-close" onclick="toggleMobileNav()">✕</button>
-  <div style="margin-top:40px">
-    <div class="mobile-badge" style="background:#00e67615;color:#00e676;border-color:#00e67644">
-      Unrealized PnL<br><strong>+$15.0034</strong>
-    </div>
-    <div class="mobile-badge" style="background:rgba(68,138,255,0.1);color:var(--blue);border-color:rgba(68,138,255,0.3)">
-      Open Positions<br><strong>6</strong>
-    </div>
-    <div class="mobile-badge" style="background:rgba(240,185,11,0.1);color:var(--gold);border-color:rgba(240,185,11,0.3)">
-      Cash Reserve<br><strong>$33,030.27</strong>
-    </div>
-    <div class="mobile-badge" style="background:rgba(0,0,0,0.2);color:var(--text-dim);border-color:var(--border)">
-      <span id="mobileClock">2026-05-16 10:34:25 IST</span>
-    </div>
-  </div>
-</div>
-
-<div class="main">
-
-<!-- ═══ STAT CARDS ═══ -->
-<div class="grid g-stats" style="margin-bottom:12px">
-  <div class="card stat">
-    <div class="stat-value" style="color:#00e676">+$7.8968</div>
-    <div class="stat-label">Total PnL</div>
-    <div class="stat-sub">Real: -$7.1066 | Unreal: +$15.0034</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:var(--blue)">6</div>
-    <div class="stat-label">Open Positions (Main Hub)</div>
-    <div class="stat-sub">43 signals</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:#00e676">50%</div>
-    <div class="stat-label">Win Rate</div>
-    <div class="stat-sub">1W / 1L</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:#00e676">77</div>
-    <div class="stat-label">Quality Score</div>
-    <div class="stat-sub"><span class="trend-badge trend-stable">STABLE</span></div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:var(--gold)">$16,515.13</div>
-    <div class="stat-label">Cash Reserve (50%)</div>
-    <div class="stat-sub">13 stablecoins · USDT $998.27</div>
-  </div>
-</div>
-
-<!-- ═══ EXTENDED STATS ═══ -->
-<div class="grid g-stats" style="margin-bottom:12px">
-  <div class="card stat">
-    <div class="stat-value" style="color:var(--gold)">$64,537.81</div>
-    <div class="stat-label">Portfolio Value (50%)</div>
-    <div class="stat-sub">All holdings in USDT</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:#f0b90b">1:1.8</div>
-    <div class="stat-label">Avg R:R</div>
-    <div class="stat-sub">6 trades with levels</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:#00e676">2%</div>
-    <div class="stat-label">Capital Exposure</div>
-    <div class="stat-sub">$3,051 deployed</div>
-  </div>
-  <div class="card stat">
-    <div class="stat-value" style="color:var(--dim);font-size:14px">2026-05-16 10:34:25 IST</div>
-    <div class="stat-label">Last Updated</div>
-    <div class="stat-sub">Auto-refresh 60s</div>
-  </div>
-</div>
-
-<!-- ═══ FUND ALLOCATION ═══ -->
-<div class="grid g-alloc" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">
-
-  <!-- Capital Deployment -->
-  <div class="card alloc-card">
-    <div class="section-title" style="font-size:13px;margin-bottom:8px">💰 Capital Deployment</div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-      <span style="color:var(--dim)">Deployed</span>
-      <span style="color:#00e676;font-weight:700">$3,051 (2%)</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-      <span style="color:var(--dim)">Cash Reserve</span>
-      <span style="color:#00e676;font-weight:700">$33,030.27 (25.6%)</span>
-    </div>
-    <div style="font-size:10px;color:var(--dim);margin-bottom:8px;padding-left:4px">USDT:$998 · USDC:$10,000 · TUSD:$10,000 · FDUSD:$7,000 · USDP:$500</div>
-    <div class="alloc-bar-wrap" style="height:8px;border-radius:4px;overflow:hidden;background:#1a1a2e;margin-bottom:10px">
-      <div style="width:2.4%;height:100%;background:#00e676;border-radius:4px"></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-      <span style="color:#3a7dff">Long $2,083</span>
-      <span style="color:#ff6b6b">Short $967</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;border-top:1px solid #1a1a2e;padding-top:6px;margin-top:4px">
-      <span style="color:#00e676;font-weight:700">LONG BIAS</span>
-      <span style="color:var(--dim)">L/S: 2.15</span>
-    </div>
-    <div style="margin-top:6px;padding-top:6px;border-top:1px solid #1a1a2e">
-      <span style="color:var(--dim);font-size:11px">Net Directional: </span>
-      <span style="color:#00e676;font-weight:600">$1,116</span>
-    </div>
-  </div>
-
-  <!-- Strategy Allocation -->
-  <div class="card alloc-card">
-    <div class="section-title" style="font-size:13px;margin-bottom:8px">📊 Strategy Allocation</div>
-    <div class="alloc-row"><span class="alloc-strat">DELTA_NEUTRAL</span><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:65.54459434268051%;background:#3a7dff"></div></div><span class="alloc-val">$2,000</span><span class="alloc-pnl" style="color:#ff1744">-$1.2253</span><span class="alloc-wr">WR 33%</span></div><div class="alloc-row"><span class="alloc-strat">2_SMC</span><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:31.710294642504593%;background:#ff6b6b"></div></div><span class="alloc-val">$967</span><span class="alloc-pnl" style="color:#00e676">+$18.5729</span><span class="alloc-wr">WR 100%</span></div><div class="alloc-row"><span class="alloc-strat">1_SIEVE</span><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:2.288315898290697%;background:#3a7dff"></div></div><span class="alloc-val">$70</span><span class="alloc-pnl" style="color:#ff1744">-$1.9516</span><span class="alloc-wr">WR 0%</span></div><div class="alloc-row"><span class="alloc-strat">8_MTF</span><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:0.45679511652420857%;background:#3a7dff"></div></div><span class="alloc-val">$14</span><span class="alloc-pnl" style="color:#ff1744">-$0.3924</span><span class="alloc-wr">WR 0%</span></div>
-    <div style="margin-top:6px;padding-top:6px;border-top:1px solid #1a1a2e">
-      <span style="color:var(--dim);font-size:11px">Signal Pipeline: </span>
-      <span style="color:#3a7dff;font-weight:600">33</span>
-      <span style="color:var(--dim);font-size:11px"> pending</span>
-      <span style="color:#00e676;font-weight:600"> 10</span>
-      <span style="color:var(--dim);font-size:11px"> executed</span>
-      <span style="color:var(--dim);font-size:11px"> (23% conv)</span>
-    </div>
-  </div>
-
-  <!-- Risk Heat + Signal Queue -->
-  <div class="card alloc-card">
-    <div class="section-title" style="font-size:13px;margin-bottom:8px">🔥 Risk Heat Map</div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-      <span style="color:var(--dim)">Max Trade Risk</span>
-      <span style="color:#ff1744;font-weight:700">80.1%</span>
-    </div>
-    <div class="risk-row"><span class="risk-badge" style="background:#ff1744">HIGH</span><span class="risk-sym">BTCUSDT</span><span class="risk-side">BUY</span><span class="risk-val">$799.90</span><span class="risk-pct" style="color:#ff1744">80.1%</span></div><div class="risk-row"><span class="risk-badge" style="background:#ff1744">HIGH</span><span class="risk-sym">ETHUSDT</span><span class="risk-side">BUY</span><span class="risk-val">$699.89</span><span class="risk-pct" style="color:#ff1744">70.1%</span></div><div class="risk-row"><span class="risk-badge" style="background:#ff1744">HIGH</span><span class="risk-sym">SOLUSDT</span><span class="risk-side">BUY</span><span class="risk-val">$499.93</span><span class="risk-pct" style="color:#ff1744">50.1%</span></div><div class="risk-row"><span class="risk-badge" style="background:#00e676">LOW</span><span class="risk-sym">BTCUSDT</span><span class="risk-side">SELL</span><span class="risk-val">$5.23</span><span class="risk-pct" style="color:#00e676">0.5%</span></div><div class="risk-row"><span class="risk-badge" style="background:#00e676">LOW</span><span class="risk-sym">XRPUSDT</span><span class="risk-side">BUY</span><span class="risk-val">$2.30</span><span class="risk-pct" style="color:#00e676">0.2%</span></div><div class="risk-row"><span class="risk-badge" style="background:#00e676">LOW</span><span class="risk-sym">XRPUSDT</span><span class="risk-side">BUY</span><span class="risk-val">$0.46</span><span class="risk-pct" style="color:#00e676">0.0%</span></div>
-    <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a1a2e">
-      <div style="color:var(--dim);font-size:11px;margin-bottom:4px">⏳ Pending Signals</div>
-      <div class="signal-row"><span class="signal-sym">AVAXUSDT</span><span class="signal-side">SELL</span><span class="signal-strat">11_ICHIMOKU</span><span class="signal-conf" style="color:#00e676">HIGH</span><span class="signal-rr">1:0.84</span></div><div class="signal-row"><span class="signal-sym">ADAUSDT</span><span class="signal-side">SELL</span><span class="signal-strat">11_ICHIMOKU</span><span class="signal-conf" style="color:#00e676">HIGH</span><span class="signal-rr">1:0.68</span></div><div class="signal-row"><span class="signal-sym">DOGEUSDT</span><span class="signal-side">BUY</span><span class="signal-strat">8_MTF</span><span class="signal-conf" style="color:#00e676">HIGH</span><span class="signal-rr">1:2.0</span></div><div class="signal-row"><span class="signal-sym">DOGEUSDT</span><span class="signal-side">BUY</span><span class="signal-strat">12_STOCHASTI</span><span class="signal-conf" style="color:#f0b90b">MEDIUM</span><span class="signal-rr">1:2.0</span></div><div class="signal-row"><span class="signal-sym">DOGEUSDT</span><span class="signal-side">BUY</span><span class="signal-strat">6_FIBONACCI</span><span class="signal-conf" style="color:#00e676">HIGH</span><span class="signal-rr">1:7.63</span></div><div class="signal-row"><span class="signal-sym">DOGEUSDT</span><span class="signal-side">BUY</span><span class="signal-strat">2_SMC</span><span class="signal-conf" style="color:#00e676">HIGH</span><span class="signal-rr">1:7.98</span></div><div class="signal-row"><span class="signal-sym">DOGEUSDT</span><span class="signal-side">BUY</span><span class="signal-strat">1_SIEVE</span><span class="signal-conf" style="color:#f0b90b">MEDIUM</span><span class="signal-rr">1:2.0</span></div><div class="signal-row"><span class="signal-sym">XRPUSDT</span><span class="signal-side">SELL</span><span class="signal-strat">6_FIBONACCI</span><span class="signal-conf" style="color:#f0b90b">MEDIUM</span><span class="signal-rr">1:2.76</span></div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══ RISK METRICS ═══ -->
-<div class="grid g-risk" style="margin-bottom:12px">
-  <div class="card risk-card">
-    <div class="risk-value" style="color:#ff1744">-17.55</div>
-    <div class="risk-label">Sharpe Ratio</div>
-  </div>
-  <div class="card risk-card">
-    <div class="risk-value" style="color:#ff1744">$7.42</div>
-    <div class="risk-label">Max Drawdown</div>
-  </div>
-  <div class="card risk-card">
-    <div class="risk-value" style="color:var(--green)">$17.77</div>
-    <div class="risk-label">Max Favorable</div>
-  </div>
-  <div class="card risk-card">
-    <div class="risk-value" style="color:var(--red)">$1.99</div>
-    <div class="risk-label">Max Adverse</div>
-  </div>
-</div>
-
-<!-- ═══ INSTITUTIONAL INTELLIGENCE ═══ -->
-<div class="grid g-alloc" style="margin-bottom:12px;grid-template-columns:1fr 1fr">
-
-  <!-- Regime Detection -->
-  <div class="card alloc-card">
-    <div class="section-title">🎯 Market Regime</div>
-    <div style="padding:8px 12px">
-      <div style='display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BTC</span><span style='color:#f0b90b;font-weight:700'>RANGING</span><span style='color:var(--dim);font-size:10px'>100%</span></div><div style='display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BNB</span><span style='color:#f0b90b;font-weight:700'>RANGING</span><span style='color:var(--dim);font-size:10px'>100%</span></div><div style='display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>ETH</span><span style='color:#f0b90b;font-weight:700'>RANGING</span><span style='color:var(--dim);font-size:10px'>100%</span></div><div style='display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>XRP</span><span style='color:#f0b90b;font-weight:700'>RANGING</span><span style='color:var(--dim);font-size:10px'>100%</span></div><div style='display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>AVAX</span><span style='color:#f0b90b;font-weight:700'>RANGING</span><span style='color:var(--dim);font-size:10px'>100%</span></div>
-    </div>
-  </div>
-
-  <!-- Risk Intelligence -->
-  <div class="card alloc-card">
-    <div class="section-title">🛡️ Risk Intelligence</div>
-    <div style="padding:8px 12px">
-      
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>VaR 95%</span><span style='color:var(--text)'>0.66%</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>VaR 99%</span><span style='color:var(--text)'>1.16%</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>CVaR 95%</span><span style='color:var(--text)'>1.01%</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>Concentration</span><span style='color:#ff1744'>HIGH</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>MC MaxDD 95p</span><span style='color:var(--text)'>1.1%</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>MC Survival >90%</span><span style='color:#00e676'>100%</span></div>
-        
-    </div>
-  </div>
-
-</div>
-
-<div class="grid g-alloc" style="margin-bottom:12px;grid-template-columns:1fr 1fr 1fr">
-
-  <!-- On-Chain Intel -->
-  <div class="card alloc-card">
-    <div class="section-title">⛓️ On-Chain Intelligence</div>
-    <div style="padding:8px 12px">
-      
-        <div style='text-align:center;padding:8px'>
-          <div style='font-size:28px;font-weight:900;color:#f0b90b'>31</div>
-          <div style='font-size:12px;color:var(--dim)'>Fear</div>
-          <div style='font-size:11px;color:var(--gold);margin-top:4px'>CAUTIOUS_BUY</div>
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div class="logo"><span class="logo-icon">◈</span><span>FX RICH</span></div>
+            <span class="mode-badge" id="mode">PAPER</span>
         </div>
+        <div class="conn"><span class="conn-dot" id="conn-dot"></span><span id="conn-text">Offline</span></div>
+    </div>
+    
+    <div class="kill-banner" id="kill"><span>🚨</span><div><div class="kill-text">KILL SWITCH ACTIVE</div></div></div>
+    
+    <div class="portfolio">
+        <div class="port-header">
+            <span class="port-title">Portfolio</span>
+            <span class="port-time" id="refresh-time">--:--</span>
+        </div>
+        <div class="port-grid">
+            <div class="metric">
+                <span class="metric-label">Equity</span>
+                <span class="metric-value" id="equity">$1,000.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Daily P&L</span>
+                <span class="metric-value" id="pnl">+$0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Positions</span>
+                <span class="metric-value" id="positions">0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Max DD</span>
+                <span class="metric-value" id="drawdown">0.0%</span>
+            </div>
+        </div>
+        <div class="risk-bar"><div class="risk-fill" id="risk-fill" style="width:0%"></div></div>
+        <div class="risk-label"><span>Risk Usage</span><span id="risk-pct">0%</span></div>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('positions', this)">Positions</div>
+        <div class="tab" onclick="switchTab('signals', this)">Signals</div>
+        <div class="tab" onclick="switchTab('history', this)">History</div>
+        <div class="tab" onclick="switchTab('tv', this)">Chart</div>
+    </div>
+    
+    <div class="tab-content active" id="tab-positions">
+        <div class="section-header">
+            <span class="section-title">Open Positions</span>
+            <span class="badge" id="pos-count">0</span>
+        </div>
+        <div id="positions-list">
+            <div class="loading"><div class="spinner"></div></div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="tab-signals">
+        <div class="section-header">
+            <span class="section-title">Active Signals</span>
+            <span class="badge" id="sig-count">0</span>
+        </div>
+        <div id="signals-list">
+            <div class="loading"><div class="spinner"></div></div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="tab-history">
+        <div class="section-header">
+            <span class="section-title">Trade History</span>
+            <span class="badge" id="hist-count">0</span>
+        </div>
+        <div id="history-list">
+            <div class="loading"><div class="spinner"></div></div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="tab-tv">
+        <div class="section-header"><span class="section-title">TradingView</span></div>
+        <div class="tv-container">
+            <iframe id="tv-chart" src="https://s.tradingview.com/widgetembed/?frameElementId=tv-chart&symbol=BINANCE:BTCUSDT.P&interval=15&timezone=Asia/Kolkata&theme=dark&style=1&locale=en&toolbar_bg=%230f1a1e&backgroundColor=%230f1a1e&gridColor=%231a2a30&textColor=%23878c8f&cursorColor=%2350d2c1&enable_publishing=false&hide_top_toolbar=false&withdateranges=true"></iframe>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div class="footer-row">
+            <div style="display:flex;align-items:center;"><span class="pulse" id="pulse"></span><span class="footer-text" id="scanner-status">Connecting...</span></div>
+            <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+        </div>
+        <div class="footer-row">
+            <span class="footer-text">FX RICH v3.0 · SMC Engine</span>
+            <span class="footer-text" id="api-url-display"></span>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // ═══════════════════════════════════════════════
+        // CONFIG — Auto-detects API from URL or uses fallback
+        // ═══════════════════════════════════════════════
+        const API_BASE = (() => {
+            const hostname = window.location.hostname;
+            // If dashboard is served via tunnel, try to find matching API tunnel
+            // For now, use the known working API tunnel
+            if (hostname.includes('trycloudflare') || hostname.includes('ngrok')) {
+                // We're on a public tunnel — use the API tunnel
+                return 'https://increases-type-extent-three.trycloudflare.com';
+            }
+            // Local dev
+            return 'http://localhost:8989';
+        })();
         
-    </div>
-  </div>
-
-  <!-- ML Signals -->
-  <div class="card alloc-card">
-    <div class="section-title">🧠 ML Signals</div>
-    <div style="padding:8px 12px">
-      <div style='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BTC</span><span style='color:#f0b90b;font-weight:700'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>48%</span></div><div style='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BNB</span><span style='color:#f0b90b;font-weight:700'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>48%</span></div><div style='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>ETH</span><span style='color:#f0b90b;font-weight:700'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>48%</span></div><div style='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>XRP</span><span style='color:#f0b90b;font-weight:700'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>48%</span></div><div style='display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>AVAX</span><span style='color:#f0b90b;font-weight:700'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>48%</span></div>
-    </div>
-  </div>
-
-  <!-- Self-Improvement -->
-  <div class="card alloc-card">
-    <div class="section-title">📈 Self-Improvement</div>
-    <div style="padding:8px 12px">
-      <div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ 2_SMC</span><span style='color:var(--dim)'>WR:50%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ 6_FIBONACCI</span><span style='color:var(--dim)'>WR:100%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ 1_SIEVE</span><span style='color:var(--dim)'>WR:0%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ 8_MTF</span><span style='color:var(--dim)'>WR:0%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ DELTA_NEUTRAL</span><span style='color:var(--dim)'>WR:0%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span>✅ 7_PRICE_ACTION</span><span style='color:var(--dim)'>WR:0%</span></div><div style='margin-top:6px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.05);font-size:10px;color:var(--gold)'>1 actions pending</div>
-    </div>
-  </div>
-
-  <!-- Correlation + Sector Rotation -->
-  <div class="card alloc-card">
-    <div class="section-title">🔗 Correlation & Rotation</div>
-    <div style="padding:8px 12px">
-      
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>Avg Correlation</span><span style='color:#f0b90b;font-weight:700'>0.759</span></div>
-        <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>Top Pairs</span><span style='color:var(--text);font-size:10px'>BTC-ETH(0.883), AVAX-ADA(0.879), XRP-ADA(0.831)</span></div>
-        <div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>L1</span><span style='color:#ff1744'>BEARISH</span><span style='color:var(--dim);font-size:10px'>-1.28%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>L1_ALT</span><span style='color:#ff1744'>BEARISH</span><span style='color:var(--dim);font-size:10px'>-2.35%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>MEME</span><span style='color:#ff1744'>BEARISH</span><span style='color:var(--dim);font-size:10px'>-2.08%</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>EXCHANGE</span><span style='color:#ff1744'>BEARISH</span><span style='color:var(--dim);font-size:10px'>-1.98%</span></div><div style='margin-top:4px;font-size:10px;color:var(--gold)'>Rotate into EXCHANGE</div>
-    </div>
-  </div>
-
-  <!-- Feature Store -->
-  <div class="card alloc-card">
-    <div class="section-title">🧠 Feature Store</div>
-    <div style="padding:8px 12px">
-      <div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BTC</span><span style='color:var(--text)'>RSI <span style='color:#ff1744'>27.03</span></span><span style='color:#ff1744;font-weight:700'>BEARISH</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>ETH</span><span style='color:var(--text)'>RSI <span style='color:#ff1744'>26.1</span></span><span style='color:#ff1744;font-weight:700'>BEARISH</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>BNB</span><span style='color:var(--text)'>RSI <span style='color:var(--text)'>43.55</span></span><span style='color:#ff1744;font-weight:700'>BEARISH</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>SOL</span><span style='color:var(--text)'>RSI <span style='color:var(--text)'>30.94</span></span><span style='color:#ff1744;font-weight:700'>BEARISH</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.05)'><span style='color:var(--dim)'>XRP</span><span style='color:var(--text)'>RSI <span style='color:#ff1744'>27.65</span></span><span style='color:#ff1744;font-weight:700'>BEARISH</span></div>
-    </div>
-  </div>
-
-  <!-- Whale Alerts -->
-  <div class="card alloc-card">
-    <div class="section-title">🐋 Whale Tracker</div>
-    <div style="padding:8px 12px">
-      <div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>BTC</span><span style='color:#f0b90b'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>0 whales</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>ETH</span><span style='color:#f0b90b'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>0 whales</span></div><div style='display:flex;justify-content:space-between;padding:2px 0;font-size:11px'><span style='color:var(--dim)'>BNB</span><span style='color:#f0b90b'>NEUTRAL</span><span style='color:var(--dim);font-size:10px'>0 whales</span></div>
-    </div>
-  </div>
-
-  <!-- Social Sentiment -->
-  <div class="card alloc-card">
-    <div class="section-title">📱 Social & Market</div>
-    <div style="padding:8px 12px">
-      
-            <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>BTC Dom</span><span style='color:var(--text)'>58.3%</span></div>
-            <div style='display:flex;justify-content:space-between;padding:3px 0'><span style='color:var(--dim)'>MktCap</span><span style='color:var(--text)'>$2.71T</span></div>
-            <div style='padding:3px 0;font-size:10px;color:var(--gold)'>🔥 BILL, HYPE, BTC, MON, ASTEROID</div>
+        // Show which API we're using
+        document.getElementById('api-url-display').textContent = API_BASE.replace('https://','').replace('http://','');
+        
+        let lastData = null;
+        let refreshTimer = null;
+        
+        // ═══════════════════════════════════════════════
+        // API FETCH
+        // ═══════════════════════════════════════════════
+        async function fetchData() {
+            showToast('Loading...', false);
             
-    </div>
-  </div>
-
-</div>
-
-<!-- ═══ MAIN GRID ═══ -->
-<div class="grid g-main">
-
-<!-- POSITIONS + HISTORY (tabbed) -->
-<div class="card g-positions">
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('pos')">Open (6)</div>
-    <div class="tab" onclick="switchTab('hist')">History (2)</div>
-    <div class="tab" onclick="switchTab('bal')">Balance</div>
-    <div class="tab" onclick="switchTab('fxrich')">FX RICH</div>
-  </div>
-  
-  <div id="tab-pos" class="tab-content active">
-    <table class='pos-table'><thead><tr><th>PAIR</th><th>SIDE</th><th>STRAT</th><th>TF</th><th>ENTRY</th><th>NOW</th><th>PNL</th><th>SL/TP</th><th>PROG</th></tr></thead><tbody><tr>
-  <td data-label="Pair"><strong>XRPUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-long">BUY</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#f0b90b15;color:#f0b90b">▥ MTF</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h → 4h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$1.47</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$1.42</td>
-  <td data-label="PnL" class="pnl-neg" style="font-size:11px">-$0.4161<br><span style="font-size:9px;opacity:0.7">-2.99%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $1.42</span> <span style="color:var(--dim)">(0.3%)</span><br>
-    <span style="color:var(--green)">TP $1.56</span> <span style="color:var(--dim)">(9.7%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:0.0%;background:var(--red)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">0.0%</span>
-  </td>
-</tr><tr>
-  <td data-label="Pair"><strong>XRPUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-long">BUY</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#f0b90b15;color:#f0b90b">⊘ Sieve</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$1.47</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$1.42</td>
-  <td data-label="PnL" class="pnl-neg" style="font-size:11px">-$2.0706<br><span style="font-size:9px;opacity:0.7">-2.97%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $1.42</span> <span style="color:var(--dim)">(0.3%)</span><br>
-    <span style="color:var(--green)">TP $1.56</span> <span style="color:var(--dim)">(9.7%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:0.0%;background:var(--red)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">0.0%</span>
-  </td>
-</tr><tr>
-  <td data-label="Pair"><strong>BTCUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-short">SELL</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#448aff15;color:#448aff">◆ SMC</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$80,554</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$79,006</td>
-  <td data-label="PnL" class="pnl-pos" style="font-size:11px">+$18.5953<br><span style="font-size:9px;opacity:0.7">+1.92%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $80,990</span> <span style="color:var(--dim)">(2.5%)</span><br>
-    <span style="color:var(--green)">TP $78,742</span> <span style="color:var(--dim)">(0.3%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:85.4%;background:var(--green)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">85.4%</span>
-  </td>
-</tr><tr>
-  <td data-label="Pair"><strong>ETHUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-long">BUY</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#88815;color:#888">? NEUTRAL</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$2,215.55</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$2,225.65</td>
-  <td data-label="PnL" class="pnl-pos" style="font-size:11px">+$3.1906<br><span style="font-size:9px;opacity:0.7">+0.46%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $0.000000</span> <span style="color:var(--dim)">(100.0%)</span><br>
-    <span style="color:var(--green)">TP $0.000000</span> <span style="color:var(--dim)">(100.0%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:0.0%;background:var(--red)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">0.0%</span>
-  </td>
-</tr><tr>
-  <td data-label="Pair"><strong>SOLUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-long">BUY</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#88815;color:#888">? NEUTRAL</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$89.05</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$88.63</td>
-  <td data-label="PnL" class="pnl-neg" style="font-size:11px">-$2.3579<br><span style="font-size:9px;opacity:0.7">-0.47%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $0.000000</span> <span style="color:var(--dim)">(100.0%)</span><br>
-    <span style="color:var(--green)">TP $0.000000</span> <span style="color:var(--dim)">(100.0%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:0.5%;background:var(--red)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">0.5%</span>
-  </td>
-</tr><tr>
-  <td data-label="Pair"><strong>BTCUSDT</strong></td>
-  <td data-label="Side"><span class="pos-side pos-long">BUY</span></td>
-  <td data-label="Strategy"><span class="strat-pill" style="background:#88815;color:#888">? NEUTRAL</span></td>
-  <td data-label="TF" style="font-size:10px;color:var(--dim)">1h</td>
-  <td data-label="Entry" style="font-family:'JetBrains Mono',monospace;font-size:11px">$79,198</td>
-  <td data-label="Now" style="font-family:'JetBrains Mono',monospace;font-size:11px">$79,006</td>
-  <td data-label="PnL" class="pnl-neg" style="font-size:11px">-$1.9379<br><span style="font-size:9px;opacity:0.7">-0.24%</span></td>
-  <td data-label="SL/TP" style="font-size:10px;font-family:'JetBrains Mono',monospace">
-    <span style="color:var(--red)">SL $0.000000</span> <span style="color:var(--dim)">(100.0%)</span><br>
-    <span style="color:var(--green)">TP $0.000000</span> <span style="color:var(--dim)">(100.0%)</span>
-  </td>
-  <td data-label="Progress">
-    <div class="progress-bar"><div class="progress-fill" style="width:0.2%;background:var(--red)"></div></div>
-    <span style="font-size:8px;color:var(--dim);font-family:'JetBrains Mono',monospace">0.2%</span>
-  </td>
-</tr></tbody></table>
-  </div>
-  
-  <div id="tab-hist" class="tab-content">
-    <div class="closed-row">
-  <span class="closed-sym">BNBUSDT</span>
-  <span class="closed-result result-sl">SL_HIT</span>
-  <span class="strat-pill" style="background:#00e67615;color:#00e676">PriceAct</span>
-  <span class="pnl-neg" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px">-$7.4223</span>
-  <span style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace">2026-05-15T15:11</span>
-</div><div class="closed-row">
-  <span class="closed-sym">AVAXUSDT</span>
-  <span class="closed-result result-tp">TP_HIT</span>
-  <span class="strat-pill" style="background:#448aff15;color:#448aff">Fib</span>
-  <span class="pnl-pos" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px">+$0.3157</span>
-  <span style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace">2026-05-15T15:11</span>
-</div>
-  </div>
-  
-  <div id="tab-bal" class="tab-content">
-    <div class="balance-row"><span class="balance-asset">TRY</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">ZAR</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">UAH</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">PLN</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">ARS</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">JPY</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">MXN</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">COP</span><span class="balance-val">18466.0000</span></div><div class="balance-row"><span class="balance-asset">VET</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">HOT</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">ZIL</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">IOST</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">CELR</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">TFUEL</span><span class="balance-val">18446.0000</span></div><div class="balance-row"><span class="balance-asset">ONE</span><span class="balance-val">18446.0000</span></div>
-  </div>
-
-  <div id="tab-fxrich" class="tab-content">
-    <div class="fx-header">
-      <span class="fx-header-icon">◆</span>
-      <span class="fx-header-title">FX RICH — Smart Money Concepts</span>
-      <span class="fx-header-badge">05:00 IST</span>
-    </div>
-    <div class="fx-summary">
-      <div class="fx-stat"><span class="fx-stat-label">Pairs Scanned</span><span class="fx-stat-val">10</span></div>
-      <div class="fx-stat"><span class="fx-stat-label">Actionable</span><span class="fx-stat-val" style="color:var(--dim)">0</span></div>
-      <div class="fx-stat"><span class="fx-stat-label">Bullish</span><span class="fx-stat-val" style="color:var(--green)">1</span></div>
-      <div class="fx-stat"><span class="fx-stat-label">Bearish</span><span class="fx-stat-val" style="color:var(--red)">8</span></div>
-    </div>
-    <div class="fx-grid">
-      
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">BTC<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">80%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:20.0%;background:#ff1744"></div>
-            <span class="fx-conf-text">1/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">84,346.43</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">66,300.50</span></div>
+            try {
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 8000);
+                
+                const resp = await fetch(API_BASE + '/api/summary', {
+                    cache: 'no-store',
+                    signal: ctrl.signal
+                });
+                clearTimeout(timeout);
+                
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                
+                const data = await resp.json();
+                lastData = data;
+                render(data);
+                updateConn(true);
+                showToast('✓ Updated', false, 800);
+                
+            } catch(e) {
+                updateConn(false);
+                console.log('API error:', e.message);
+                // Show fallback with last data if available
+                if (lastData) {
+                    render(lastData);
+                    showToast('⚠ Using cached data', true, 1500);
+                } else {
+                    showEmpty();
+                    showToast('⚠ API offline', true, 2000);
+                }
+            }
+        }
         
+        // ═══════════════════════════════════════════════
+        // RENDER
+        // ═══════════════════════════════════════════════
+        function render(data) {
+            // Portfolio
+            const equity = data.portfolio?.equity || 1000;
+            document.getElementById('equity').textContent = fmt$(equity);
+            
+            const pnl = data.portfolio?.daily_pnl || 0;
+            document.getElementById('pnl').textContent = fmtSigned(pnl);
+            document.getElementById('pnl').className = 'metric-value ' + (pnl >= 0 ? 'positive' : 'negative');
+            
+            document.getElementById('positions').textContent = data.portfolio?.position_count || 0;
+            document.getElementById('drawdown').textContent = (data.portfolio?.drawdown_pct || 0).toFixed(1) + '%';
+            
+            const riskPct = Math.min(data.portfolio?.risk_usage_pct || 0, 100);
+            document.getElementById('risk-fill').style.width = riskPct + '%';
+            document.getElementById('risk-pct').textContent = riskPct.toFixed(1) + '%';
+            
+            // Mode
+            const mode = (data.mode || 'paper').toUpperCase();
+            document.getElementById('mode').textContent = mode;
+            if (mode === 'LIVE') {
+                document.getElementById('mode').style.background = 'rgba(240,185,11,0.15)';
+                document.getElementById('mode').style.color = '#f0b90b';
+            }
+            
+            // Kill switch
+            const kill = data.system?.kill_switch_active || false;
+            document.getElementById('kill').className = 'kill-banner ' + (kill ? 'active' : '');
+            
+            // Positions
+            const posList = document.getElementById('positions-list');
+            const positions = data.positions || [];
+            document.getElementById('pos-count').textContent = positions.length;
+            
+            if (!positions.length) {
+                posList.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">No open positions</div><div class="empty-sub">Waiting for SMC signals...</div></div>';
+            } else {
+                posList.innerHTML = positions.map(p => {
+                    const pnl = p.unrealized_pnl || 0;
+                    const progress = p.progress_pct || 0;
+                    const side = (p.side || 'LONG').toUpperCase();
+                    return `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="symbol"><span class="symbol-emoji">${emoji(p.symbol)}</span>${p.symbol}</span>
+                            <span class="metric-value ${pnl>=0?'positive':'negative'}">${fmtSigned(pnl)}</span>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail"><span class="detail-label">Entry</span><span class="detail-value">${fmt$(p.entry_price)}</span></div>
+                            <div class="detail"><span class="detail-label">Mark</span><span class="detail-value">${fmt$(p.mark_price||p.current_price)}</span></div>
+                            <div class="detail"><span class="detail-label">Size</span><span class="detail-value">${p.quantity||p.size||0}</span></div>
+                        </div>
+                        <div class="progress"><div class="progress-fill ${progress>=50?'progress-green':'progress-red'}" style="width:${Math.min(progress,100)}%"></div></div>
+                        <div class="card-footer"><span>${side} · SL: ${fmt$(p.sl_price)} · TP: ${fmt$(p.tp_price)}</span><span>${fmtTime(p.timestamp)}</span></div>
+                    </div>`;
+                }).join('');
+            }
+            
+            // Signals
+            const sigList = document.getElementById('signals-list');
+            const signals = (data.signals || []).filter(s => s.status === 'ACTIVE').slice(0, 10);
+            document.getElementById('sig-count').textContent = signals.length;
+            
+            if (!signals.length) {
+                sigList.innerHTML = '<div class="empty"><div class="empty-icon">📡</div><div class="empty-text">No active signals</div><div class="empty-sub">Scanner checks every 5 minutes</div></div>';
+            } else {
+                sigList.innerHTML = signals.map(s => {
+                    const dots = Array(5).fill(0).map((_,i) => `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${i<(s.confirmations||0)?'var(--accent)':'var(--border)'};margin-right:2px;"></span>`).join('');
+                    return `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="symbol"><span class="symbol-emoji">${emoji(s.symbol)}</span>${s.symbol}</span>
+                            <span class="side-badge ${s.signal==='BUY'?'side-long':'side-short'}">${s.signal}</span>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail"><span class="detail-label">Entry</span><span class="detail-value">${fmt$(s.entry_price)}</span></div>
+                            <div class="detail"><span class="detail-label">SL</span><span class="detail-value" style="color:var(--loss)">${fmt$(s.sl_price)}</span></div>
+                            <div class="detail"><span class="detail-label">TP</span><span class="detail-value" style="color:var(--profit)">${fmt$(s.tp_price)}</span></div>
+                        </div>
+                        <div style="margin:8px 0;">${dots}</div>
+                        <div class="card-footer"><span>${s.metadata?.bos_choch || 'SMC Setup'}</span><span>RR: ${s.metadata?.rr || 'N/A'}</span></div>
+                    </div>`;
+                }).join('');
+            }
+            
+            // History
+            const histList = document.getElementById('history-list');
+            const trades = (data.trades || []).slice(0, 10);
+            document.getElementById('hist-count').textContent = trades.length;
+            
+            if (!trades.length) {
+                histList.innerHTML = '<div class="empty"><div class="empty-icon">📜</div><div class="empty-text">No trades yet</div><div class="empty-sub">First trade will appear here</div></div>';
+            } else {
+                histList.innerHTML = trades.map(t => {
+                    const pnl = t.realized_pnl || 0;
+                    const win = pnl > 0;
+                    return `
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="symbol"><span class="symbol-emoji">${emoji(t.symbol)}</span>${t.symbol}</span>
+                            <span class="${win?'positive':'negative'}">${win?'✅':'❌'} ${fmtSigned(pnl)}</span>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail"><span class="detail-label">Entry</span><span class="detail-value">${fmt$(t.entry_price)}</span></div>
+                            <div class="detail"><span class="detail-label">Close</span><span class="detail-value">${fmt$(t.close_price||t.exit_price||'—')}</span></div>
+                            <div class="detail"><span class="detail-label">State</span><span class="detail-value">${t.state||'CLOSED'}</span></div>
+                        </div>
+                        <div class="card-footer"><span>${fmtTime(t.closed_at||t.timestamp)}</span><span>${t.side} ${t.quantity||''}</span></div>
+                    </div>`;
+                }).join('');
+            }
+            
+            // Scanner status
+            const paused = data.system?.scanner_paused || false;
+            document.getElementById('scanner-status').textContent = paused ? 'Scanner Paused' : 'Scanner Active';
+            document.getElementById('pulse').className = 'pulse ' + (paused ? '' : 'active');
+            
+            // Refresh time
+            document.getElementById('refresh-time').textContent = new Date().toLocaleTimeString('en-IN',{
+                hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+            });
+        }
         
-        <div class="fx-reason">Only 1/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">ETH<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">85%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:40.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">2/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">2,301.75</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">2,205.95</span></div>
+        function showEmpty() {
+            ['positions-list','signals-list','history-list'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.querySelector('.card')) {
+                    const label = id.replace('-list','').replace('positions','positions').replace('signals','signals').replace('history','trades');
+                    el.innerHTML = `<div class="empty"><div class="empty-icon">⚠</div><div class="empty-text">Connection failed</div><div class="empty-sub">Tap Refresh to retry</div></div>`;
+                }
+            });
+        }
         
+        // ═══════════════════════════════════════════════
+        // UI HELPERS
+        // ═══════════════════════════════════════════════
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
         
-        <div class="fx-reason">Only 2/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">SOL<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">95%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:60.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">3/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">92.63</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">88.54</span></div>
-        <div class="fx-sweep">⚡ PDL@88.54</div>
+        function updateConn(online) {
+            document.getElementById('conn-dot').className = 'conn-dot ' + (online ? 'online' : '');
+            document.getElementById('conn-text').textContent = online ? 'Online' : 'Offline';
+        }
         
-        <div class="fx-reason">Only 3/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">XRP<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">60%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:40.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">2/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">1.50</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">1.22</span></div>
+        function showToast(msg, isError = false, duration = 1500) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + (isError ? 'error' : '') + ' show';
+            setTimeout(() => { t.classList.remove('show'); }, duration);
+        }
         
+        function fmt$(v) {
+            if (v === null || v === undefined || v === '—') return '—';
+            const n = parseFloat(v);
+            if (isNaN(n)) return '—';
+            return '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+        function fmtSigned(v) {
+            const n = parseFloat(v)||0;
+            return (n>=0?'+':'') + fmt$(n).replace('$','');
+        }
+        function fmtTime(iso) {
+            if(!iso) return '--';
+            const d = new Date(iso);
+            return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+        }
+        function emoji(s) {
+            const m = {BTC:'₿',ETH:'⟠',SOL:'◎',XRP:'✕',DOGE:'Ð',ADA:'₳',DOT:'•',LINK:'⬡',BNB:'◆',AVAX:'▲'};
+            return m[(s||'').replace(/USDT|BUSD|\.P/g,'')] || '📈';
+        }
         
-        <div class="fx-reason">Only 2/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">BNB<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#888">CONSOLIDATION</span>
-            <span class="fx-bias-score">20%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:20.0%;background:#ff1744"></div>
-            <span class="fx-conf-text">1/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#555;margin-right:8px;font-size:11px">✗ Trend Alignment</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ High Value Zone</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">740.13</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">669.44</span></div>
-        <div class="fx-sweep">⚡ PDL@669.44</div>
-        
-        <div class="fx-reason">Only 1/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">DOGE<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#4caf50">LEAN_BULL</span>
-            <span class="fx-bias-score">35%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:20.0%;background:#ff1744"></div>
-            <span class="fx-conf-text">1/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">0.12</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">0.11</span></div>
-        
-        
-        <div class="fx-reason">Only 1/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">ADA<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">95%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:40.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">2/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">0.27</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">0.26</span></div>
-        
-        
-        <div class="fx-reason">Only 2/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">AVAX<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">95%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:20.0%;background:#ff1744"></div>
-            <span class="fx-conf-text">1/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ High Value Zone</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">9.96</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">9.42</span></div>
-        
-        
-        <div class="fx-reason">Only 1/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">DOT<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">85%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:60.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">3/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">1.37</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">1.29</span></div>
-        <div class="fx-sweep">⚡ PWL@1.30</div>
-        
-        <div class="fx-reason">Only 3/5 confirmations — probability too low</div>
-    </div>
-    <div class="fx-card" style="border-left:3px solid #f0b90b">
-        <div class="fx-card-header">
-            <div class="fx-pair">LINK<span class="fx-pair-quote">/USDT</span></div>
-            <div class="fx-signal" style="background:#f0b90b20;color:#f0b90b">◌ NO ENTRY</div>
-        </div>
-        <div class="fx-bias-row">
-            <span class="fx-bias-label" style="color:#ff1744">BEARISH</span>
-            <span class="fx-bias-score">90%</span>
-        </div>
-        <div class="fx-conf-bar-wrap">
-            <div class="fx-conf-bar" style="width:60.0%;background:#f0b90b"></div>
-            <span class="fx-conf-text">3/5 Confirmations</span>
-        </div>
-        <div class="fx-details"><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Trend Alignment</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ High Value Zone</span><br><span style="color:#00e676;margin-right:8px;font-size:11px">✓ Liquidity Sweep</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Ltf Trigger</span><br><span style="color:#555;margin-right:8px;font-size:11px">✗ Extra Confluence</span><br></div>
-        <div class="fx-level"><span class="fx-level-label">PDH</span><span class="fx-level-val">10.56</span></div><div class="fx-level"><span class="fx-level-label">PDL</span><span class="fx-level-val">9.98</span></div>
-        <div class="fx-sweep">⚡ PDL@9.98</div><div class="fx-sweep">⚡ PWL@10.00</div>
-        
-        <div class="fx-reason">Only 3/5 confirmations — probability too low</div>
-    </div>
-    </div>
-  </div>
-</div>
-
-<!-- STRATEGIES -->
-<div class="card g-strategies">
-  <div class="card-title"><span class="icon">🧠</span> Strategy Performance</div>
-  <div class="strat-grid">
-    <div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#f0b90b"><span class="strat-icon">⊘</span> Sieve</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#448aff"><span class="strat-icon">◆</span> SMC</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#00e676"><span class="strat-icon">↗</span> Trend</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#e040fb"><span class="strat-icon">⇌</span> MeanRev</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#ff9100"><span class="strat-icon">▤</span> OrderFlow</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#448aff"><span class="strat-icon">⋈</span> Fib</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#00e676"><span class="strat-icon">▣</span> PriceAct</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#ff9100"><span class="strat-icon">⇄</span> Arb</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#e040fb"><span class="strat-icon">Σ</span> Quant</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#6c5ce7"><span class="strat-icon">◇</span> Options</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#f0b90b"><span class="strat-icon">☁</span> Ichi</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#00e676"><span class="strat-icon">▦</span> Grid</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#00bcd4"><span class="strat-icon">⚖</span> DeltaN</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#e040fb"><span class="strat-icon">⇌</span> MR</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#00e676"><span class="strat-icon">▦</span> Grid</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#ff1744"><span class="strat-icon">⚡</span> LiqCas</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#ff9100"><span class="strat-icon">⇄</span> Pairs</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#6c5ce7"><span class="strat-icon">🧠</span> XGBoost</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div><div class="strat-card">
-  <div class="strat-header">
-    <div class="strat-name" style="color:#f0b90b"><span class="strat-icon">▥</span> MTF</div>
-    <div class="strat-wr" style="color:var(--dim)">0%</div>
-  </div>
-  <div class="strat-stats">
-    <div>Sig: <span style="color:var(--text)">0</span></div>
-    <div>W/L: <span style="color:var(--green)">0</span>/<span style="color:var(--red)">0</span></div>
-    <div>PnL: <span style="color:var(--green)">$0.00</span></div>
-    <div>Wt: <span style="color:var(--orange)">1.00x</span></div>
-  </div>
-  
-</div>
-  </div>
-</div>
-
-<!-- SIGNALS -->
-<div class="card g-signals">
-  <div class="card-title"><span class="icon">📡</span> Latest Signals</div>
-  <div class="signal-list">
-    <div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> AVAXUSDT <span style="color:var(--dim);font-size:10px">$9.52</span></div>
-    <div class="signal-meta">☁ Ichi · R:R 0.8 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> ADAUSDT <span style="color:var(--dim);font-size:10px">$0.2598</span></div>
-    <div class="signal-meta">☁ Ichi · R:R 0.7 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> DOGEUSDT <span style="color:var(--dim);font-size:10px">$0.1123</span></div>
-    <div class="signal-meta">▥ MTF · R:R 2.0 · HIGH · 1h → 4h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> DOGEUSDT <span style="color:var(--dim);font-size:10px">$0.1123</span></div>
-    <div class="signal-meta">? STOCHASTIC · R:R 2.0 · MEDIUM · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> DOGEUSDT <span style="color:var(--dim);font-size:10px">$0.1123</span></div>
-    <div class="signal-meta">⋈ Fib · R:R 7.6 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> DOGEUSDT <span style="color:var(--dim);font-size:10px">$0.1123</span></div>
-    <div class="signal-meta">◆ SMC · R:R 8.0 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> DOGEUSDT <span style="color:var(--dim);font-size:10px">$0.1123</span></div>
-    <div class="signal-meta">⊘ Sieve · R:R 2.0 · MEDIUM · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> XRPUSDT <span style="color:var(--dim);font-size:10px">$1.44</span></div>
-    <div class="signal-meta">⋈ Fib · R:R 2.8 · MEDIUM · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> XRPUSDT <span style="color:var(--dim);font-size:10px">$1.44</span></div>
-    <div class="signal-meta">◆ SMC · R:R 6.4 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> BNBUSDT <span style="color:var(--dim);font-size:10px">$675.46</span></div>
-    <div class="signal-meta">? STOCHASTIC · R:R 2.0 · MEDIUM · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-long">BUY</span> BNBUSDT <span style="color:var(--dim);font-size:10px">$675.46</span></div>
-    <div class="signal-meta">⋈ Fib · R:R 13.0 · MEDIUM · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> BTCUSDT <span style="color:var(--dim);font-size:10px">$79,295</span></div>
-    <div class="signal-meta">⋈ Fib · R:R 1.7 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> BTCUSDT <span style="color:var(--dim);font-size:10px">$79,295</span></div>
-    <div class="signal-meta">↗ Trend · R:R 2.0 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> AVAXUSDT <span style="color:var(--dim);font-size:10px">$9.71</span></div>
-    <div class="signal-meta">☁ Ichi · R:R 0.9 · HIGH · 1h</div>
-  </div>
-</div><div class="signal-item">
-  <div class="signal-exec sig-exec-no"></div>
-  <div>
-    <div class="signal-sym"><span class="pos-side pos-short">SELL</span> ADAUSDT <span style="color:var(--dim);font-size:10px">$0.2645</span></div>
-    <div class="signal-meta">☁ Ichi · R:R 0.7 · HIGH · 1h</div>
-  </div>
-</div>
-  </div>
-</div>
-
-</div>
-
-<!-- ═══ CHARTS ═══ -->
-<div class='grid g-charts' style='margin-top:12px'><div class="card"><div class="card-title"><span class="icon">📊</span> PnL Dashboard</div><img class="chart-img" src="/charts/pnl/dashboard_20260515_1511.png" alt="PnL Dashboard" loading="lazy"></div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-long">LONG</span>
-    <span class="badge-lv strat">Multi-Timeframe</span>
-    <span class="badge-lv pair">XRPUSDT</span>
-    <span class="level-tag entry-tag" style="color:#26a69a">Entry $1.47</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $1.42</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $1.56</span>
-  </div>
-  <div id="tv_chart_0" class="tv-widget-container" data-tv-idx="0"></div>
-</div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-long">LONG</span>
-    <span class="badge-lv strat">Sieve Method</span>
-    <span class="badge-lv pair">XRPUSDT</span>
-    <span class="level-tag entry-tag" style="color:#26a69a">Entry $1.47</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $1.42</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $1.56</span>
-  </div>
-  <div id="tv_chart_1" class="tv-widget-container" data-tv-idx="1"></div>
-</div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-short">SHORT</span>
-    <span class="badge-lv strat">Smart Money Concepts</span>
-    <span class="badge-lv pair">BTCUSDT</span>
-    <span class="level-tag entry-tag" style="color:#ef5350">Entry $80,554</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $80,990</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $78,742</span>
-  </div>
-  <div id="tv_chart_2" class="tv-widget-container" data-tv-idx="2"></div>
-</div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-long">LONG</span>
-    <span class="badge-lv strat">DELTA_NEUTRAL</span>
-    <span class="badge-lv pair">ETHUSDT</span>
-    <span class="level-tag entry-tag" style="color:#26a69a">Entry $2,215.55</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $0.000000</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $0.000000</span>
-  </div>
-  <div id="tv_chart_3" class="tv-widget-container" data-tv-idx="3"></div>
-</div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-long">LONG</span>
-    <span class="badge-lv strat">DELTA_NEUTRAL</span>
-    <span class="badge-lv pair">SOLUSDT</span>
-    <span class="level-tag entry-tag" style="color:#26a69a">Entry $89.05</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $0.000000</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $0.000000</span>
-  </div>
-  <div id="tv_chart_4" class="tv-widget-container" data-tv-idx="4"></div>
-</div><div class="card chart-card-interactive">
-  <div class="chart-info-bar">
-    <span class="badge-lv side-long">LONG</span>
-    <span class="badge-lv strat">DELTA_NEUTRAL</span>
-    <span class="badge-lv pair">BTCUSDT</span>
-    <span class="level-tag entry-tag" style="color:#26a69a">Entry $79,198</span>
-    <span class="level-tag sl-tag" style="color:#FF1744">SL $0.000000</span>
-    <span class="level-tag tp-tag" style="color:#00E676">TP $0.000000</span>
-  </div>
-  <div id="tv_chart_5" class="tv-widget-container" data-tv-idx="5"></div>
-
-<!-- ═══ BOTTOM ROW ═══ -->
-<div class="grid g-bottom" style="margin-top:12px">
-
-<!-- IMPROVEMENTS + SUGGESTIONS -->
-<div class="card">
-  <div class="card-title"><span class="icon">⚡</span> Self-Improvement</div>
-  <div class="suggestion"><span class="suggestion-strat">1_SIEVE</span> Widen RSI thresholds: use RSI<30 (stricter) for longs, RSI>70 for shorts. Consider EMA 200 confirmation on multiple timeframes.</div><div class="suggestion"><span class="suggestion-strat">1_SIEVE</span> Pause strategy after 3 consecutive losses. Add trend-strength (ADX>25) gate.</div><div class="suggestion"><span class="suggestion-strat">1_SIEVE</span> Reduce ATR multiplier for SL from 1.5x to 1.2x. Add volume confirmation filter.</div>
-  <div class='no-data'>Learning...</div>
-</div>
-
-<!-- LIVE PRICES -->
-<div class="card">
-  <div class="card-title"><span class="icon">💹</span> Live Prices</div>
-  <table class="pos-table live-price-table">
-    <thead><tr><th>PAIR</th><th>PRICE</th></tr></thead>
-    <tbody>
-    <tr><td style="font-weight:700">BTCUSDT</td><td style="font-family:JetBrains Mono,monospace">$79,006</td></tr><tr><td style="font-weight:700">ETHUSDT</td><td style="font-family:JetBrains Mono,monospace">$2,225.65</td></tr><tr><td style="font-weight:700">SOLUSDT</td><td style="font-family:JetBrains Mono,monospace">$88.63</td></tr><tr><td style="font-weight:700">BNBUSDT</td><td style="font-family:JetBrains Mono,monospace">$663.03</td></tr><tr><td style="font-weight:700">XRPUSDT</td><td style="font-family:JetBrains Mono,monospace">$1.42</td></tr><tr><td style="font-weight:700">DOGEUSDT</td><td style="font-family:JetBrains Mono,monospace">$0.1116</td></tr><tr><td style="font-weight:700">ADAUSDT</td><td style="font-family:JetBrains Mono,monospace">$0.2588</td></tr><tr><td style="font-weight:700">AVAXUSDT</td><td style="font-family:JetBrains Mono,monospace">$9.47</td></tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- EQUITY CURVE -->
-<div class="card">
-  <div class="card-title"><span class="icon">📈</span> Portfolio History</div>
-  <svg viewBox="0 0 320 160" style="width:100%;height:160px">
-  <defs><linearGradient id="eq-grad" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0%" stop-color="#ff1744" stop-opacity="0.3"/>
-    <stop offset="100%" stop-color="#ff1744" stop-opacity="0"/>
-  </linearGradient></defs>
-  <polygon points="10,150 10.0,150.0 31.4,10.0 52.9,150.0 74.3,150.0 95.7,150.0 117.1,150.0 138.6,10.1 160.0,150.0 181.4,150.0 202.9,150.0 224.3,150.0 245.7,10.4 267.1,12.8 288.6,150.0 310.0,150.0 310,150" fill="url(#eq-grad)"/>
-  <polyline points="10.0,150.0 31.4,10.0 52.9,150.0 74.3,150.0 95.7,150.0 117.1,150.0 138.6,10.1 160.0,150.0 181.4,150.0 202.9,150.0 224.3,150.0 245.7,10.4 267.1,12.8 288.6,150.0 310.0,150.0" fill="none" stroke="#ff1744" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="310.0" cy="150.0" r="4" fill="#ff1744"/>
-  <text x="310" y="162" text-anchor="end" fill="#777" font-size="9" font-family="monospace">-$15.3375</text>
-</svg>
-</div>
-
-</div>
-
-</div>
-
-<div class="footer">
-  PABLO'S TRADE HUB v2.0 · SQLite DB · Binance Testnet · Auto-refresh 60s · <span id="tunnel-link"></span><br>
-  10 trades · 43 signals · 0 strategies · Built 2026-05-16 10:34:25 IST
-</div>
-
-<script>
-function updateClock() {
-  const now = new Date();
-  const ist = new Date(now.getTime() + (5.5*60*60*1000));
-  const timeStr = ist.toISOString().slice(0,19).replace('T',' ') + ' IST';
-  const clockEl = document.getElementById('clock');
-  if (clockEl) clockEl.textContent = timeStr;
-  const mobileClockEl = document.getElementById('mobileClock');
-  if (mobileClockEl) mobileClockEl.textContent = timeStr;
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-function switchTab(id) {
-  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  if (event && event.target) event.target.classList.add('active');
-}
-
-function toggleMobileNav() {
-  const panel = document.getElementById('navPanel');
-  const overlay = document.getElementById('navOverlay');
-  if (!panel || !overlay) return;
-  panel.classList.toggle('open');
-  overlay.classList.toggle('open');
-  document.body.style.overflow = panel.classList.contains('open') ? 'hidden' : '';
-}
-// Fetch and display current tunnel URL in footer
-fetch("https://cdn.jsdelivr.net/gh/hermes18974-jpg/trade-fx@main/tunnel_url.json?_=" + Date.now())
-  .then(r => r.json()).then(d => {
-    const el = document.getElementById("tunnel-link");
-    if (el && d.url) el.innerHTML = `<a href="${d.url}" style="color:var(--gold)">${d.url.replace("https://","")}</a>`;
-  }).catch(() => {});
-</script>
+        // ═══════════════════════════════════════════════
+        // START
+        // ═══════════════════════════════════════════════
+        fetchData();
+        refreshTimer = setInterval(fetchData, 5000); // Every 5s
+    </script>
 </body>
 </html>
